@@ -21,30 +21,37 @@ function App() {
 
     const tenRandomCountries = [];
     const finalTen = [];
+    try {
+      const fetchCountries = await fetch(url);
 
-    const fetchCountries = await fetch(url);
-    const countriesJsonData = await fetchCountries.json();
+      const countriesJsonData = await fetchCountries.json();
 
-    for (let i = 0; i < 10; i++) {
-      const randomNumber = Math.floor(Math.random() * countriesJsonData.length);
-      const currentRandomCountry = { ...countriesJsonData[randomNumber] };
-      tenRandomCountries.push({ ...currentRandomCountry });
+      for (let i = 0; i < 10; i++) {
+        const randomNumber = Math.floor(
+          Math.random() * countriesJsonData.length
+        );
+        const currentRandomCountry = { ...countriesJsonData[randomNumber] };
+        tenRandomCountries.push({ ...currentRandomCountry });
+      }
+
+      const allFeches = tenRandomCountries.map((country) => fetch(country.url));
+
+      const allResponses = await Promise.all(allFeches);
+
+      for (let j = 0; j < allResponses.length; j++) {
+        const jsonData = await allResponses[j].json();
+        const currentCountryResponse = {
+          name: jsonData.names.name,
+          location: { lat: jsonData.maps.lat, lng: jsonData.maps.long },
+          neighbors: jsonData.neighbors.map((item) => ({ ...item })),
+        };
+        finalTen.push(currentCountryResponse);
+      }
+      setCountries(finalTen);
+    } catch (error) {
+      resetHandler();
+      setMessage(error.message);
     }
-
-    const allFeches = tenRandomCountries.map((country) => fetch(country.url));
-
-    const allResponses = await Promise.all(allFeches);
-
-    for (let j = 0; j < allResponses.length; j++) {
-      const jsonData = await allResponses[j].json();
-      const currentCountryResponse = {
-        name: jsonData.names.name,
-        location: { lat: jsonData.maps.lat, lng: jsonData.maps.long },
-        neighbors: jsonData.neighbors.map((item) => ({ ...item })),
-      };
-      finalTen.push(currentCountryResponse);
-    }
-    setCountries(finalTen);
   };
 
   const mutualHandler = () => {
